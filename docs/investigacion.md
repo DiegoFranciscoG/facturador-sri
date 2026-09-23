@@ -263,17 +263,47 @@ represente la clave de acceso en formato **GS1-128** (Code 128). El RIDE
 en PDF tiene la misma validez tributaria que el XML. Retención documental:
 mínimo 7 años (emisor y receptor).
 
-## 9. Riesgos / SUPUESTOS a resolver antes de D2
+## 9. Riesgos / SUPUESTOS pendientes de verificar contra fuentes oficiales
+
+Estado al cierre de D5: el codigo ya esta construido y probado contra estos
+supuestos (WireMock, tests unitarios y de firma), pero ninguno de ellos se
+pudo contrastar contra el documento oficial del SRI por el bloqueo del WAF
+descrito en la nota metodologica al inicio de este documento.
 
 | # | Supuesto | Riesgo si es incorrecto | Cómo se resuelve |
 |---|---|---|---|
-| 1 | Códigos exactos de `codigoPorcentaje` (sección 4.6) | Bajo — el 15% es el único usado en el MVP (venta general); si el código real fuera otro, es un cambio de una constante | Abrir Ficha Técnica v2.34 y contrastar Anexo de tablas |
-| 2 | Estructura exacta de los XSD (solo se infirió de un XML de ejemplo, no del XSD real) | Medio — un `minOccurs`/`maxOccurs` mal inferido rompe la validación XSD | Descargar el ZIP oficial de XSD (enlaces en sección 1) y generar las clases JAXB con `xjc` directamente desde ellos, no a mano |
+| 1 | Códigos exactos de `codigoPorcentaje` (sección 4.6) | Bajo — el 15% es el único usado en el MVP (venta general); si el código real fuera otro, es un cambio de una constante en `V6__seed_catalogos_sri.sql` | Abrir Ficha Técnica v2.34 y contrastar Anexo de tablas |
+| 2 | Estructura exacta de los XSD (solo se infirió de un XML de ejemplo, no del XSD real) | Medio — un `minOccurs`/`maxOccurs` mal inferido rompe la validación XSD contra el SRI real, aunque el XML ya se probó bien formado y con los totales cuadrados (`ComprobanteXmlBuilderTest`) | Descargar el ZIP oficial de XSD (enlaces en sección 1), generar las clases JAXB con `xjc` directamente desde ellos y reemplazar `service/sri/xml/*.java` |
 | 3 | Redacción exacta de la Resolución NAC-DGERCGC18-00000233 sobre RIDE | Bajo — solo afecta redacción del `SECURITY.md`/README, no la lógica | Buscar el texto en el Registro Oficial si se necesita citar textualmente |
 | 4 | Si el ambiente de pruebas actual sigue en `celcer.sri.gob.ec` (no cambió de host) | Medio — si cambió, el cliente PRUEBAS-SRI opcional no conectará | Confirmar con un `nslookup`/ping manual tuyo o al activar el modo PRUEBAS-SRI por primera vez |
+| 5 | Namespaces y forma exacta del sobre SOAP (`http://ec.gob.sri.ws.recepcion`/`.autorizacion`, nombres de las operaciones y de los campos de respuesta) — ver `SriSoapClient.java` | Medio — si el SRI real espera un namespace o nombre de campo distinto, el modo PRUEBAS-SRI fallaria aunque el modo SIMULADO (WireMock, que usa exactamente estos mismos nombres) siga funcionando igual | Capturar con un sniffer HTTP un envío real (o el WSDL, una vez accesible) y ajustar `SriSoapClient.enviarRecepcion`/`consultarAutorizacion` |
 
 ## 10. Datos ya verificados por ti (contexto de la cuenta, no re-verificados aquí)
 
 - IVA general 2026: 15% (BPONE, sri.gob.ec).
 - Render free, Neon free, límites de despliegue: ya documentados en tus
   reglas maestras, se usarán tal cual en la fase de despliegue (D6).
+
+## 11. Limitaciones del entorno de desarrollo durante D2-D5
+
+- **Docker Desktop no llegó a inicializar** en esta máquina durante la
+  construcción (WSL2 arranca bien, pero el backend de Docker nunca expuso su
+  socket — probablemente un diálogo de primer arranque pendiente). Por eso
+  el test de integración `VentaFlujoCompletoIntegrationTest` (Testcontainers)
+  no se pudo ejecutar aquí, aunque compila y está listo; correrá normalmente
+  en GitHub Actions (Docker viene activo en los runners) o en tu máquina una
+  vez que actives Docker Desktop.
+- Por el mismo motivo no se pudo hacer una prueba manual de extremo a
+  extremo (levantar el backend real + Postgres + frontend juntos y hacer
+  clic en el flujo completo). Sí se verificó, cada una por separado y con
+  evidencia reproducible: el algoritmo de clave de acceso (casos calculados
+  a mano), los validadores de cédula/RUC, la generación y estructura del XML,
+  la validez criptográfica de la firma XAdES-BES (auto-verificación con
+  `javax.xml.crypto`), el cliente SOAP contra un WireMock real, la máquina de
+  estados del comprobante, y el frontend (build de producción + build de
+  desarrollo renderizado en el navegador).
+- La paleta de colores del frontend (navy/teal) es una elección propia:
+  no tuve acceso a los otros proyectos del portafolio para replicar su
+  paleta exacta como pediste. Se puede ajustar en
+  `frontend/src/styles.css` (bloque `@theme`) en un minuto si tienes una
+  paleta de referencia.

@@ -180,7 +180,21 @@ erDiagram
         int intento_numero
         timestamp fecha
     }
+
+    USUARIO {
+        bigint id PK
+        varchar username UK
+        varchar password_hash "BCrypt"
+        varchar rol "ADMIN / CAJERO"
+        boolean activo
+    }
 ```
+
+`USUARIO` no tiene relacion con las demas tablas (es solo para el login JWT del
+backend, agregado durante la construccion cuando se implemento la capa de
+seguridad — ver V8 en la seccion 4). Se crea un unico usuario ADMIN al primer
+arranque desde `ADMIN_USERNAME`/`ADMIN_PASSWORD` (variables de entorno,
+nunca una contrasena de ejemplo versionada).
 
 ## 2. Reglas de negocio y su fuente
 
@@ -226,6 +240,7 @@ perfil de producción real si algún día este proyecto deja de ser una demo.
 | `V5__crear_comprobantes.sql` | `comprobante`, `detalle_comprobante`, `impuesto_detalle`, `pago`, `evento_sri` |
 | `V6__seed_catalogos_sri.sql` | Catálogos oficiales versión 2.34 (datos públicos, no personales) |
 | `V7__seed_datos_demo.sql` | Emisor, establecimiento, punto de emisión, secuenciales, cliente y producto **ficticios** para desarrollo local |
+| `V8__crear_usuarios.sql` | `usuario` (login JWT del backend, agregada al construir la capa de seguridad) |
 
 ## 5. Pendiente de ajustar tras verificación del XSD oficial
 
