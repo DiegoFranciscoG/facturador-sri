@@ -1,0 +1,5 @@
+{
+  "buildCommand": "sed -i \"s#http://localhost:8080#$API_BASE_URL#g\" src/environments/environment.ts && npm run build",
+  "outputDirectory": "dist/frontend/browser",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}

@@ -1,0 +1,52 @@
+# Blueprint de Render para el backend (modo SIMULADO) + un WireMock propio
+# que hace de SRI simulado (Render free no tiene volumenes persistentes, por
+# eso los stubs se hornean en docker/wiremock/Dockerfile). La base de datos
+# NO se crea aqui: usa Neon (Render Postgres free expira a los 30 dias) y
+# pega su cadena de conexion en DB_URL/DB_USER/DB_PASSWORD desde el
+# dashboard de Render (nunca en este archivo).
+#
+# No se pudo probar este blueprint contra una cuenta real de Render en esta
+# sesion (crear cuentas/servicios de terceros no es algo que el asistente
+# pueda hacer). Verifica al desplegar: el nombre exacto que Render asigna al
+# servicio de WireMock (para las URLs SRI_RECEPCION_URL/SRI_AUTORIZACION_URL)
+# y si el plan free actual requiere fijar el puerto de otra forma.
+services:
+  - type: web
+    name: facturador-sri-sri-simulado
+    runtime: docker
+    dockerfilePath: ./docker/wiremock/Dockerfile
+    dockerContext: ./docker/wiremock
+    plan: free
+    envVars:
+      - key: PORT
+        value: 8080
+
+  - type: web
+    name: facturador-sri-backend
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: SRI_MODO
+        value: SIMULADO
+      - key: SRI_RECEPCION_URL
+        value: https://facturador-sri-sri-simulado.onrender.com/RecepcionComprobantesOffline
+      - key: SRI_AUTORIZACION_URL
+        value: https://facturador-sri-sri-simulado.onrender.com/AutorizacionComprobantesOffline
+      - key: DB_URL
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_USERNAME
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
