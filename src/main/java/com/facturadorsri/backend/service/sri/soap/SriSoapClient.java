@@ -52,7 +52,7 @@ public class SriSoapClient {
 
         Document respuesta = enviarSoap(sriProperties.recepcionUrl(), envelope, "validarComprobante");
         String estado = textoDe(respuesta, "estado");
-        List<MensajeSri> mensajes = extraerMensajes(respuesta);
+        List<MensajeSri> mensajes = extraerMensajes(respuesta.getDocumentElement());
         return new RespuestaRecepcion(estado, mensajes);
     }
 
@@ -111,16 +111,25 @@ public class SriSoapClient {
         }
     }
 
-    private List<MensajeSri> extraerMensajes(Node contexto) {
+    /**
+     * "mensaje" es a la vez el contenedor (<mensajes><mensaje>...) y el
+     * nombre del campo de texto dentro de ese mismo contenedor
+     * (<mensaje><mensaje>SECUENCIAL_REGISTRADO</mensaje></mensaje>). Por eso
+     * NO se puede usar getElementsByTagName (recursivo) para listar los
+     * contenedores: hay que quedarse solo con los hijos DIRECTOS de
+     * "mensajes" para no confundir el campo de texto con otro mensaje mas.
+     */
+    private List<MensajeSri> extraerMensajes(Element contexto) {
         List<MensajeSri> mensajes = new ArrayList<>();
-        NodeList nodos = ((Element) contexto).getElementsByTagName("mensaje");
-        for (int i = 0; i < nodos.getLength(); i++) {
-            Element mensaje = (Element) nodos.item(i);
-            mensajes.add(new MensajeSri(
-                    textoDe(mensaje, "identificador"),
-                    textoDirectoDe(mensaje, "mensaje"),
-                    textoDe(mensaje, "informacionAdicional"),
-                    textoDe(mensaje, "tipo")));
+        NodeList contenedores = contexto.getElementsByTagName("mensajes");
+        for (int i = 0; i < contenedores.getLength(); i++) {
+            for (Element mensaje : hijosDirectos((Element) contenedores.item(i), "mensaje")) {
+                mensajes.add(new MensajeSri(
+                        hijoDirectoTexto(mensaje, "identificador"),
+                        hijoDirectoTexto(mensaje, "mensaje"),
+                        hijoDirectoTexto(mensaje, "informacionAdicional"),
+                        hijoDirectoTexto(mensaje, "tipo")));
+            }
         }
         return mensajes;
     }
@@ -135,15 +144,20 @@ public class SriSoapClient {
         return nodos.getLength() > 0 ? nodos.item(0).getTextContent() : null;
     }
 
-    /** Como "mensaje" es tanto el contenedor como una etiqueta hija, se toma el primer nivel directo. */
-    private String textoDirectoDe(Element mensajeElemento, String tagHijo) {
-        NodeList hijos = mensajeElemento.getChildNodes();
+    private List<Element> hijosDirectos(Element padre, String tagHijo) {
+        List<Element> resultado = new ArrayList<>();
+        NodeList hijos = padre.getChildNodes();
         for (int i = 0; i < hijos.getLength(); i++) {
             Node hijo = hijos.item(i);
             if (hijo.getNodeType() == Node.ELEMENT_NODE && hijo.getNodeName().equals(tagHijo)) {
-                return hijo.getTextContent();
+                resultado.add((Element) hijo);
             }
         }
-        return null;
+        return resultado;
+    }
+
+    private String hijoDirectoTexto(Element padre, String tagHijo) {
+        List<Element> hijos = hijosDirectos(padre, tagHijo);
+        return hijos.isEmpty() ? null : hijos.get(0).getTextContent();
     }
 }
