@@ -44,7 +44,7 @@ jobs:
           cd "$(dirname "$POM")" && (./mvnw -B -ntp verify 2>/dev/null || mvn -B -ntp verify)
       - name: Node 22
         if: hashFiles('**/package-lock.json') != ''
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '22'
       - name: npm ci + test + build
