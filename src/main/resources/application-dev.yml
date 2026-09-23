@@ -1,0 +1,11 @@
+spring:
+  jpa:
+    show-sql: true
+
+logging:
+  level:
+    com.facturadorsri.backend: DEBUG
+
+facturador:
+  sri:
+    modo: SIMULADO

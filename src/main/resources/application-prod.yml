@@ -1,0 +1,8 @@
+spring:
+  jpa:
+    show-sql: false
+
+logging:
+  level:
+    com.facturadorsri.backend: INFO
+    org.hibernate.SQL: WARN
