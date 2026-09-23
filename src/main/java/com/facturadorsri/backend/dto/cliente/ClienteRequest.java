@@ -10,6 +10,7 @@ public record ClienteRequest(
         String tipoIdentificacion,
 
         @NotBlank @Size(min = 5, max = 20)
+        @Pattern(regexp = "^[A-Za-z0-9]+$", message = "la identificacion solo admite letras y numeros")
         String identificacion,
 
         @NotBlank @Size(max = 300)
@@ -21,7 +22,7 @@ public record ClienteRequest(
         @Email @Size(max = 150)
         String email,
 
-        @Size(max = 20)
+        @Pattern(regexp = "^$|^[0-9+()\\-\\s]{7,20}$", message = "telefono no valido")
         String telefono
 ) {
 }

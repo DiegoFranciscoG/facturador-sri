@@ -11,26 +11,59 @@
 @if (mostrarFormulario()) {
   <div class="bg-white rounded-lg shadow p-5 mb-6 border border-slate-200">
     <h2 class="font-medium text-slate-700 mb-4">Nuevo producto</h2>
-    <form (ngSubmit)="guardar()" class="grid grid-cols-2 gap-4">
+    <form #f="ngForm" (ngSubmit)="f.valid && guardar()" class="grid grid-cols-2 gap-4" novalidate>
       <div>
         <label class="block text-xs font-medium text-slate-600 mb-1">Código principal</label>
-        <input name="codigoPrincipal" required [(ngModel)]="form.codigoPrincipal" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" />
+        <input
+          name="codigoPrincipal" #codigoPrincipal="ngModel" required maxlength="25" pattern="^[A-Za-z0-9._-]+$"
+          [(ngModel)]="form.codigoPrincipal"
+          class="w-full rounded-md border px-3 py-2 text-sm"
+          [class.border-red-400]="codigoPrincipal.invalid && codigoPrincipal.touched"
+          [class.border-slate-300]="!(codigoPrincipal.invalid && codigoPrincipal.touched)"
+        />
+        @if (codigoPrincipal.invalid && codigoPrincipal.touched) {
+          <p class="text-xs text-red-600 mt-1">Obligatorio: letras, números, punto o guion.</p>
+        }
       </div>
       <div>
         <label class="block text-xs font-medium text-slate-600 mb-1">Código auxiliar</label>
-        <input name="codigoAuxiliar" [(ngModel)]="form.codigoAuxiliar" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" />
+        <input
+          name="codigoAuxiliar" #codigoAuxiliar="ngModel" maxlength="25" pattern="^$|^[A-Za-z0-9._-]+$"
+          [(ngModel)]="form.codigoAuxiliar"
+          class="w-full rounded-md border px-3 py-2 text-sm"
+          [class.border-red-400]="codigoAuxiliar.invalid && codigoAuxiliar.touched"
+          [class.border-slate-300]="!(codigoAuxiliar.invalid && codigoAuxiliar.touched)"
+        />
       </div>
       <div class="col-span-2">
         <label class="block text-xs font-medium text-slate-600 mb-1">Descripción</label>
-        <input name="descripcion" required [(ngModel)]="form.descripcion" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" />
+        <input
+          name="descripcion" #descripcion="ngModel" required maxlength="300"
+          [(ngModel)]="form.descripcion"
+          class="w-full rounded-md border px-3 py-2 text-sm"
+          [class.border-red-400]="descripcion.invalid && descripcion.touched"
+          [class.border-slate-300]="!(descripcion.invalid && descripcion.touched)"
+        />
+        @if (descripcion.invalid && descripcion.touched) {
+          <p class="text-xs text-red-600 mt-1">Este campo es obligatorio.</p>
+        }
       </div>
       <div>
         <label class="block text-xs font-medium text-slate-600 mb-1">Unidad de medida</label>
-        <input name="unidadMedida" required [(ngModel)]="form.unidadMedida" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" />
+        <input name="unidadMedida" required maxlength="20" [(ngModel)]="form.unidadMedida" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" />
       </div>
       <div>
         <label class="block text-xs font-medium text-slate-600 mb-1">Precio unitario</label>
-        <input name="precioUnitario" type="number" step="0.01" min="0" required [(ngModel)]="form.precioUnitario" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" />
+        <input
+          name="precioUnitario" #precioUnitario="ngModel" type="number" step="0.01" min="0.01" max="999999.99" required
+          [(ngModel)]="form.precioUnitario"
+          class="w-full rounded-md border px-3 py-2 text-sm"
+          [class.border-red-400]="precioUnitario.invalid && precioUnitario.touched"
+          [class.border-slate-300]="!(precioUnitario.invalid && precioUnitario.touched)"
+        />
+        @if (precioUnitario.invalid && precioUnitario.touched) {
+          <p class="text-xs text-red-600 mt-1">Debe ser un número mayor a 0.</p>
+        }
       </div>
       <div>
         <label class="block text-xs font-medium text-slate-600 mb-1">Tarifa de IVA</label>
@@ -49,7 +82,7 @@
         <button type="button" (click)="mostrarFormulario.set(false)" class="px-4 py-2 text-sm rounded-md border border-slate-300">
           Cancelar
         </button>
-        <button type="submit" [disabled]="guardando()" class="px-4 py-2 text-sm rounded-md bg-brand-600 hover:bg-brand-700 text-white disabled:opacity-50">
+        <button type="submit" [disabled]="guardando() || f.invalid" class="px-4 py-2 text-sm rounded-md bg-brand-600 hover:bg-brand-700 text-white disabled:opacity-50">
           Guardar
         </button>
       </div>

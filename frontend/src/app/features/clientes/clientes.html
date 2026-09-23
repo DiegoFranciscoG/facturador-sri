@@ -11,10 +11,10 @@
 @if (mostrarFormulario()) {
   <div class="bg-white rounded-lg shadow p-5 mb-6 border border-slate-200">
     <h2 class="font-medium text-slate-700 mb-4">Nuevo cliente</h2>
-    <form (ngSubmit)="guardar()" class="grid grid-cols-2 gap-4">
+    <form #f="ngForm" (ngSubmit)="f.valid && guardar()" class="grid grid-cols-2 gap-4" novalidate>
       <div>
         <label class="block text-xs font-medium text-slate-600 mb-1">Tipo de identificación</label>
-        <select name="tipoIdentificacion" [(ngModel)]="form.tipoIdentificacion" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
+        <select name="tipoIdentificacion" required [(ngModel)]="form.tipoIdentificacion" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
           @for (tipo of tiposIdentificacion; track tipo.codigo) {
             <option [value]="tipo.codigo">{{ tipo.nombre }}</option>
           }
@@ -22,23 +22,59 @@
       </div>
       <div>
         <label class="block text-xs font-medium text-slate-600 mb-1">Identificación</label>
-        <input name="identificacion" required [(ngModel)]="form.identificacion" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" />
+        <input
+          name="identificacion" #identificacion="ngModel" required minlength="5" maxlength="20" pattern="^[A-Za-z0-9]+$"
+          [(ngModel)]="form.identificacion"
+          class="w-full rounded-md border px-3 py-2 text-sm"
+          [class.border-red-400]="identificacion.invalid && identificacion.touched"
+          [class.border-slate-300]="!(identificacion.invalid && identificacion.touched)"
+        />
+        @if (identificacion.invalid && identificacion.touched) {
+          <p class="text-xs text-red-600 mt-1">Entre 5 y 20 caracteres, solo letras y números.</p>
+        }
       </div>
       <div class="col-span-2">
         <label class="block text-xs font-medium text-slate-600 mb-1">Razón social / Nombres</label>
-        <input name="razonSocial" required [(ngModel)]="form.razonSocial" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" />
+        <input
+          name="razonSocial" #razonSocial="ngModel" required maxlength="300"
+          [(ngModel)]="form.razonSocial"
+          class="w-full rounded-md border px-3 py-2 text-sm"
+          [class.border-red-400]="razonSocial.invalid && razonSocial.touched"
+          [class.border-slate-300]="!(razonSocial.invalid && razonSocial.touched)"
+        />
+        @if (razonSocial.invalid && razonSocial.touched) {
+          <p class="text-xs text-red-600 mt-1">Este campo es obligatorio.</p>
+        }
       </div>
       <div class="col-span-2">
         <label class="block text-xs font-medium text-slate-600 mb-1">Dirección</label>
-        <input name="direccion" [(ngModel)]="form.direccion" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" />
+        <input name="direccion" maxlength="300" [(ngModel)]="form.direccion" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" />
       </div>
       <div>
         <label class="block text-xs font-medium text-slate-600 mb-1">Email</label>
-        <input name="email" type="email" [(ngModel)]="form.email" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" />
+        <input
+          name="email" #email="ngModel" type="email" maxlength="150"
+          [(ngModel)]="form.email"
+          class="w-full rounded-md border px-3 py-2 text-sm"
+          [class.border-red-400]="email.invalid && email.touched"
+          [class.border-slate-300]="!(email.invalid && email.touched)"
+        />
+        @if (email.invalid && email.touched) {
+          <p class="text-xs text-red-600 mt-1">Correo no válido.</p>
+        }
       </div>
       <div>
         <label class="block text-xs font-medium text-slate-600 mb-1">Teléfono</label>
-        <input name="telefono" [(ngModel)]="form.telefono" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" />
+        <input
+          name="telefono" #telefono="ngModel" pattern="^$|^[0-9+()\-\s]{7,20}$"
+          [(ngModel)]="form.telefono"
+          class="w-full rounded-md border px-3 py-2 text-sm"
+          [class.border-red-400]="telefono.invalid && telefono.touched"
+          [class.border-slate-300]="!(telefono.invalid && telefono.touched)"
+        />
+        @if (telefono.invalid && telefono.touched) {
+          <p class="text-xs text-red-600 mt-1">Entre 7 y 20 dígitos.</p>
+        }
       </div>
 
       @if (error()) {
@@ -49,7 +85,7 @@
         <button type="button" (click)="mostrarFormulario.set(false)" class="px-4 py-2 text-sm rounded-md border border-slate-300">
           Cancelar
         </button>
-        <button type="submit" [disabled]="guardando()" class="px-4 py-2 text-sm rounded-md bg-brand-600 hover:bg-brand-700 text-white disabled:opacity-50">
+        <button type="submit" [disabled]="guardando() || f.invalid" class="px-4 py-2 text-sm rounded-md bg-brand-600 hover:bg-brand-700 text-white disabled:opacity-50">
           Guardar
         </button>
       </div>

@@ -56,7 +56,7 @@
           </div>
           <div>
             <label class="block text-xs font-medium text-slate-600 mb-1">Cantidad</label>
-            <input type="number" min="1" [(ngModel)]="ncCantidad" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" />
+            <input type="number" min="1" [max]="cantidadMaxima" step="1" [(ngModel)]="ncCantidad" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" />
           </div>
           <div>
             <label class="block text-xs font-medium text-slate-600 mb-1">Bodega de devolución</label>
@@ -68,7 +68,7 @@
           </div>
           <div class="col-span-2">
             <label class="block text-xs font-medium text-slate-600 mb-1">Motivo</label>
-            <input [(ngModel)]="ncMotivo" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" />
+            <input minlength="5" maxlength="300" [(ngModel)]="ncMotivo" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" />
           </div>
         </div>
         @if (errorNc()) {

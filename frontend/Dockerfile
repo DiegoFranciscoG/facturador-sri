@@ -3,7 +3,7 @@
 FROM node:22.11-alpine AS build
 WORKDIR /build
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm install
 COPY . .
 ARG API_BASE_URL=http://localhost:8080
 RUN sed -i "s#http://localhost:8080#${API_BASE_URL}#g" src/environments/environment.ts

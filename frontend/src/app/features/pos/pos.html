@@ -52,7 +52,7 @@
         </div>
         <div class="w-24">
           <label class="block text-xs font-medium text-slate-600 mb-1">Cantidad</label>
-          <input type="number" min="1" [(ngModel)]="cantidad" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" />
+          <input type="number" min="1" [max]="cantidadMaxima" step="1" [(ngModel)]="cantidad" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" />
         </div>
         <button (click)="agregarLinea()" class="px-4 py-2 text-sm rounded-md bg-brand-600 hover:bg-brand-700 text-white">
           Agregar

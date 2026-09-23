@@ -3,7 +3,11 @@ import { Component, OnInit, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ApiService } from '../../core/api.service';
+import { mensajeDeError } from '../../core/error.util';
 import { Bodega, CatalogoItem, Cliente, Comprobante, Producto } from '../../core/models';
+import { NotificationService } from '../../core/notification.service';
+
+const CANTIDAD_MAXIMA = 999999;
 
 interface LineaVenta {
   producto: Producto;
@@ -32,6 +36,8 @@ export class Pos implements OnInit {
   error = signal<string | null>(null);
   resultado = signal<Comprobante | null>(null);
 
+  readonly cantidadMaxima = CANTIDAD_MAXIMA;
+
   readonly totalSinImpuestos = computed(() =>
     this.lineas().reduce((suma, l) => suma + l.producto.precioUnitario * l.cantidad, 0),
   );
@@ -48,16 +54,24 @@ export class Pos implements OnInit {
   constructor(
     private readonly api: ApiService,
     private readonly router: Router,
+    private readonly notifications: NotificationService,
   ) {}
 
   ngOnInit(): void {
-    this.api.listarClientes(0, 100).subscribe((p) => this.clientes.set(p.content));
-    this.api.listarProductos(0, 100).subscribe((p) => {
-      this.productos.set(p.content.filter((prod) => prod.activo));
+    this.api.listarClientes(0, 100).subscribe({
+      next: (p) => this.clientes.set(p.content),
+      error: (err) => this.notifications.error(mensajeDeError(err, 'No se pudieron cargar los clientes.')),
     });
-    this.api.listarBodegas().subscribe((b) => {
-      this.bodegas.set(b);
-      this.bodegaId = b[0]?.id;
+    this.api.listarProductos(0, 100).subscribe({
+      next: (p) => this.productos.set(p.content.filter((prod) => prod.activo)),
+      error: (err) => this.notifications.error(mensajeDeError(err, 'No se pudieron cargar los productos.')),
+    });
+    this.api.listarBodegas().subscribe({
+      next: (b) => {
+        this.bodegas.set(b);
+        this.bodegaId = b[0]?.id;
+      },
+      error: (err) => this.notifications.error(mensajeDeError(err, 'No se pudieron cargar las bodegas.')),
     });
     this.api.catalogo('FORMA_PAGO').subscribe((items) => this.formasPago.set(items));
     this.api.catalogo('CODIGO_PORCENTAJE_IVA').subscribe((items) => (this.tarifasIva = items));
@@ -71,11 +85,21 @@ export class Pos implements OnInit {
 
   agregarLinea(): void {
     const producto = this.productos().find((p) => p.id === this.productoSeleccionadoId);
-    if (!producto || this.cantidad <= 0) {
+    if (!producto) {
+      this.notifications.error('Seleccione un producto.');
+      return;
+    }
+    if (!this.cantidad || this.cantidad <= 0) {
+      this.notifications.error('La cantidad debe ser mayor a cero.');
+      return;
+    }
+    if (this.cantidad > CANTIDAD_MAXIMA) {
+      this.notifications.error(`La cantidad no puede superar ${CANTIDAD_MAXIMA}.`);
       return;
     }
     this.lineas.update((actuales) => [...actuales, { producto, cantidad: this.cantidad }]);
     this.cantidad = 1;
+    this.productoSeleccionadoId = undefined;
   }
 
   quitarLinea(index: number): void {
@@ -83,8 +107,16 @@ export class Pos implements OnInit {
   }
 
   confirmarVenta(): void {
-    if (!this.clienteId || !this.bodegaId || this.lineas().length === 0) {
-      this.error.set('Seleccione cliente, bodega y al menos un producto.');
+    if (!this.clienteId) {
+      this.notifications.error('Seleccione un cliente.');
+      return;
+    }
+    if (!this.bodegaId) {
+      this.notifications.error('Seleccione una bodega.');
+      return;
+    }
+    if (this.lineas().length === 0) {
+      this.notifications.error('Agregue al menos un producto a la venta.');
       return;
     }
     this.error.set(null);
@@ -104,10 +136,13 @@ export class Pos implements OnInit {
           this.enviando.set(false);
           this.resultado.set(comprobante);
           this.lineas.set([]);
+          this.notifications.exito(`Factura ${comprobante.secuencial} registrada.`);
         },
         error: (err) => {
           this.enviando.set(false);
-          this.error.set(err.error?.mensaje ?? 'No se pudo registrar la venta.');
+          const mensaje = mensajeDeError(err, 'No se pudo registrar la venta.');
+          this.error.set(mensaje);
+          this.notifications.error(mensaje);
         },
       });
   }

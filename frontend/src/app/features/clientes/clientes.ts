@@ -1,7 +1,10 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/api.service';
+import { ConfirmService } from '../../core/confirm.service';
+import { mensajeDeError } from '../../core/error.util';
 import { Cliente, ClienteRequest } from '../../core/models';
+import { NotificationService } from '../../core/notification.service';
 
 @Component({
   selector: 'app-clientes',
@@ -24,14 +27,21 @@ export class Clientes implements OnInit {
     { codigo: '08', nombre: 'Identificación del exterior' },
   ];
 
-  constructor(private readonly api: ApiService) {}
+  constructor(
+    private readonly api: ApiService,
+    private readonly notifications: NotificationService,
+    private readonly confirmService: ConfirmService,
+  ) {}
 
   ngOnInit(): void {
     this.cargar();
   }
 
   cargar(): void {
-    this.api.listarClientes().subscribe((pagina) => this.clientes.set(pagina.content));
+    this.api.listarClientes().subscribe({
+      next: (pagina) => this.clientes.set(pagina.content),
+      error: (err) => this.notifications.error(mensajeDeError(err, 'No se pudieron cargar los clientes.')),
+    });
   }
 
   nuevo(): void {
@@ -47,20 +57,33 @@ export class Clientes implements OnInit {
       next: () => {
         this.guardando.set(false);
         this.mostrarFormulario.set(false);
+        this.notifications.exito('Cliente creado correctamente.');
         this.cargar();
       },
       error: (err) => {
         this.guardando.set(false);
-        this.error.set(err.error?.mensaje ?? 'No se pudo guardar el cliente.');
+        const mensaje = mensajeDeError(err, 'No se pudo guardar el cliente.');
+        this.error.set(mensaje);
+        this.notifications.error(mensaje);
       },
     });
   }
 
-  eliminar(cliente: Cliente): void {
-    if (!confirm(`¿Eliminar a ${cliente.razonSocial}?`)) {
+  async eliminar(cliente: Cliente): Promise<void> {
+    const confirmado = await this.confirmService.pedir(
+      'Eliminar cliente',
+      `¿Eliminar a ${cliente.razonSocial}? Esta acción no se puede deshacer.`,
+    );
+    if (!confirmado) {
       return;
     }
-    this.api.eliminarCliente(cliente.id).subscribe(() => this.cargar());
+    this.api.eliminarCliente(cliente.id).subscribe({
+      next: () => {
+        this.notifications.exito('Cliente eliminado.');
+        this.cargar();
+      },
+      error: (err) => this.notifications.error(mensajeDeError(err, 'No se pudo eliminar el cliente.')),
+    });
   }
 
   private formularioVacio(): ClienteRequest {

@@ -2,7 +2,9 @@ import { DecimalPipe } from '@angular/common';
 import { Component, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ApiService } from '../../core/api.service';
+import { mensajeDeError } from '../../core/error.util';
 import { Comprobante, EstadoComprobante } from '../../core/models';
+import { NotificationService } from '../../core/notification.service';
 
 @Component({
   selector: 'app-comprobantes-list',
@@ -22,16 +24,20 @@ export class ComprobantesList implements OnInit {
     'NO_AUTORIZADO',
   ];
 
-  constructor(private readonly api: ApiService) {}
+  constructor(
+    private readonly api: ApiService,
+    private readonly notifications: NotificationService,
+  ) {}
 
   ngOnInit(): void {
     this.cargar();
   }
 
   cargar(): void {
-    this.api
-      .listarComprobantes(0, 50, this.filtroEstado() || undefined)
-      .subscribe((pagina) => this.comprobantes.set(pagina.content));
+    this.api.listarComprobantes(0, 50, this.filtroEstado() || undefined).subscribe({
+      next: (pagina) => this.comprobantes.set(pagina.content),
+      error: (err) => this.notifications.error(mensajeDeError(err, 'No se pudieron cargar los comprobantes.')),
+    });
   }
 
   cambiarFiltro(estado: string): void {

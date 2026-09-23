@@ -1,0 +1,22 @@
+@if (confirmService.solicitud(); as solicitud) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-sm w-full p-5">
+      <h2 class="font-semibold text-slate-800 mb-2">{{ solicitud.titulo }}</h2>
+      <p class="text-sm text-slate-600 mb-5">{{ solicitud.mensaje }}</p>
+      <div class="flex justify-end gap-2">
+        <button
+          (click)="confirmService.responder(false)"
+          class="px-4 py-2 text-sm rounded-md border border-slate-300 hover:bg-slate-50"
+        >
+          Cancelar
+        </button>
+        <button
+          (click)="confirmService.responder(true)"
+          class="px-4 py-2 text-sm rounded-md bg-red-600 hover:bg-red-700 text-white"
+        >
+          Confirmar
+        </button>
+      </div>
+    </div>
+  </div>
+}
