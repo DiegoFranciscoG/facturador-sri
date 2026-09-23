@@ -35,3 +35,11 @@ INSERT INTO producto (
 ) VALUES
 ('PROD-001', 'AUX-001', 'Producto demo con IVA 15%', 'UNIDAD', 10.00, '2', '4', TRUE),
 ('PROD-002', 'AUX-002', 'Producto demo tarifa 0%', 'UNIDAD', 5.50, '2', '0', TRUE);
+
+-- Stock inicial (kardex): sin esto los productos demo nacen con saldo 0 y
+-- ninguna venta de prueba podria completarse.
+INSERT INTO movimiento_inventario (
+    producto_id, bodega_id, tipo_movimiento, cantidad, costo_unitario, saldo_cantidad, observacion
+) VALUES
+(1, 1, 'ENTRADA_COMPRA', 100, 6.00, 100, 'Stock inicial de demostración'),
+(2, 1, 'ENTRADA_COMPRA', 100, 3.50, 100, 'Stock inicial de demostración');

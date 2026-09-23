@@ -82,12 +82,10 @@ public class Comprobante {
     @Builder.Default
     private BigDecimal importeTotal = BigDecimal.ZERO;
 
-    @Lob
-    @Column(name = "xml_firmado")
+    @Column(name = "xml_firmado", columnDefinition = "TEXT")
     private String xmlFirmado;
 
-    @Lob
-    @Column(name = "xml_autorizacion")
+    @Column(name = "xml_autorizacion", columnDefinition = "TEXT")
     private String xmlAutorizacion;
 
     @Column(name = "numero_autorizacion", length = 49)

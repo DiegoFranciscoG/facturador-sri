@@ -11,7 +11,7 @@ CREATE TABLE emisor (
     obligado_contabilidad     BOOLEAN NOT NULL DEFAULT FALSE,
     regimen_rimpe             VARCHAR(40),
     agente_retencion          VARCHAR(20),
-    ambiente                  CHAR(1) NOT NULL DEFAULT '1',
+    ambiente                  VARCHAR(1) NOT NULL DEFAULT '1',
     created_at                TIMESTAMP NOT NULL DEFAULT now(),
     updated_at                TIMESTAMP NOT NULL DEFAULT now(),
     CONSTRAINT chk_emisor_ruc CHECK (ruc ~ '^[0-9]{13}$'),
@@ -26,7 +26,7 @@ CREATE TABLE emisor (
 CREATE TABLE establecimiento (
     id             BIGSERIAL PRIMARY KEY,
     emisor_id      BIGINT NOT NULL REFERENCES emisor (id),
-    codigo         CHAR(3) NOT NULL,
+    codigo         VARCHAR(3) NOT NULL,
     direccion      VARCHAR(300) NOT NULL,
     nombre_comercial VARCHAR(300),
     activo         BOOLEAN NOT NULL DEFAULT TRUE,
@@ -37,7 +37,7 @@ CREATE TABLE establecimiento (
 CREATE TABLE punto_emision (
     id                  BIGSERIAL PRIMARY KEY,
     establecimiento_id  BIGINT NOT NULL REFERENCES establecimiento (id),
-    codigo              CHAR(3) NOT NULL,
+    codigo              VARCHAR(3) NOT NULL,
     descripcion         VARCHAR(200) NOT NULL,
     activo              BOOLEAN NOT NULL DEFAULT TRUE,
     CONSTRAINT uk_punto_emision UNIQUE (establecimiento_id, codigo),

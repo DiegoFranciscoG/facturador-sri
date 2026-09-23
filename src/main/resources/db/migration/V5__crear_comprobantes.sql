@@ -4,14 +4,14 @@
 
 CREATE TABLE comprobante (
     id                        BIGSERIAL PRIMARY KEY,
-    clave_acceso              CHAR(49) NOT NULL UNIQUE,
+    clave_acceso              VARCHAR(49) NOT NULL UNIQUE,
     tipo_comprobante          VARCHAR(2) NOT NULL,
     establecimiento_id        BIGINT NOT NULL REFERENCES establecimiento (id),
     punto_emision_id          BIGINT NOT NULL REFERENCES punto_emision (id),
     secuencial                VARCHAR(9) NOT NULL,
     fecha_emision             DATE NOT NULL,
-    ambiente                  CHAR(1) NOT NULL,
-    tipo_emision              CHAR(1) NOT NULL DEFAULT '1',
+    ambiente                  VARCHAR(1) NOT NULL,
+    tipo_emision              VARCHAR(1) NOT NULL DEFAULT '1',
     cliente_id                BIGINT NOT NULL REFERENCES cliente (id),
     comprobante_relacionado_id BIGINT REFERENCES comprobante (id),
     motivo                    VARCHAR(300),

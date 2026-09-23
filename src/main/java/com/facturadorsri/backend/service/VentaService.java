@@ -15,7 +15,8 @@ import com.facturadorsri.backend.repository.*;
 import com.facturadorsri.backend.service.sri.AccessKeyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -28,9 +29,15 @@ import java.util.Map;
  * secuencial (bloqueo pesimista), genera la clave de acceso, registra el
  * kardex de salida y deja el comprobante listo para que
  * ComprobanteProcesamientoService lo firme y envie al SRI.
+ *
+ * La creacion se hace en su propia transaccion (TransactionTemplate) que
+ * hace commit ANTES de invocar a ComprobanteProcesamientoService: ese
+ * servicio abre una transaccion NUEVA (REQUIRES_NEW) para no retener el
+ * lock del secuencial durante la llamada SOAP, y una transaccion nueva
+ * solo ve datos ya comprometidos, no los de una transaccion todavia abierta
+ * en el mismo hilo.
  */
 @Service
-@RequiredArgsConstructor
 public class VentaService {
 
     private final EstablecimientoRepository establecimientoRepository;
@@ -45,9 +52,46 @@ public class VentaService {
     private final InventarioService inventarioService;
     private final SriProperties sriProperties;
     private final ComprobanteProcesamientoService comprobanteProcesamientoService;
+    private final TransactionTemplate transactionTemplate;
 
-    @Transactional
+    public VentaService(EstablecimientoRepository establecimientoRepository,
+                         PuntoEmisionRepository puntoEmisionRepository,
+                         ClienteRepository clienteRepository,
+                         BodegaRepository bodegaRepository,
+                         ProductoRepository productoRepository,
+                         ComprobanteRepository comprobanteRepository,
+                         CatalogoSriService catalogoSriService,
+                         SecuencialService secuencialService,
+                         AccessKeyService accessKeyService,
+                         InventarioService inventarioService,
+                         SriProperties sriProperties,
+                         ComprobanteProcesamientoService comprobanteProcesamientoService,
+                         PlatformTransactionManager transactionManager) {
+        this.establecimientoRepository = establecimientoRepository;
+        this.puntoEmisionRepository = puntoEmisionRepository;
+        this.clienteRepository = clienteRepository;
+        this.bodegaRepository = bodegaRepository;
+        this.productoRepository = productoRepository;
+        this.comprobanteRepository = comprobanteRepository;
+        this.catalogoSriService = catalogoSriService;
+        this.secuencialService = secuencialService;
+        this.accessKeyService = accessKeyService;
+        this.inventarioService = inventarioService;
+        this.sriProperties = sriProperties;
+        this.comprobanteProcesamientoService = comprobanteProcesamientoService;
+        this.transactionTemplate = new TransactionTemplate(transactionManager);
+    }
+
     public ComprobanteResponse crearFactura(VentaRequest request) {
+        Long comprobanteId = transactionTemplate.execute(status -> crearComprobantePendiente(request));
+        comprobanteProcesamientoService.procesar(comprobanteId);
+        // Transaccion propia: procesar() ya cerro la suya, y sin sesion
+        // activa la asociacion perezosa cliente no se puede leer.
+        return transactionTemplate.execute(status ->
+                aResponse(comprobanteRepository.findById(comprobanteId).orElseThrow()));
+    }
+
+    private Long crearComprobantePendiente(VentaRequest request) {
         Establecimiento establecimiento = establecimientoRepository.findById(request.establecimientoId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Establecimiento no encontrado: " + request.establecimientoId()));
@@ -151,10 +195,7 @@ public class VentaService {
         }
 
         comprobante = comprobanteRepository.save(comprobante);
-        comprobanteProcesamientoService.procesar(comprobante.getId());
-        comprobante = comprobanteRepository.findById(comprobante.getId()).orElseThrow();
-
-        return aResponse(comprobante);
+        return comprobante.getId();
     }
 
     private ComprobanteResponse aResponse(Comprobante c) {

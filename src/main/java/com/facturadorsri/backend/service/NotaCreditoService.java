@@ -14,9 +14,9 @@ import com.facturadorsri.backend.repository.BodegaRepository;
 import com.facturadorsri.backend.repository.ComprobanteRepository;
 import com.facturadorsri.backend.repository.ProductoRepository;
 import com.facturadorsri.backend.service.sri.AccessKeyService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -27,9 +27,12 @@ import java.time.LocalDate;
  * un motivo (docs/modelo-datos.md seccion 2). Restituye al inventario las
  * cantidades acreditadas (se asume devolucion fisica de mercaderia; un
  * ajuste puramente monetario sin devolucion queda fuera del MVP).
+ *
+ * Igual que VentaService: la creacion corre en su propia transaccion que
+ * hace commit antes de invocar a ComprobanteProcesamientoService (que abre
+ * su propia transaccion REQUIRES_NEW).
  */
 @Service
-@RequiredArgsConstructor
 public class NotaCreditoService {
 
     private final ComprobanteRepository comprobanteRepository;
@@ -40,9 +43,36 @@ public class NotaCreditoService {
     private final AccessKeyService accessKeyService;
     private final InventarioService inventarioService;
     private final ComprobanteProcesamientoService comprobanteProcesamientoService;
+    private final TransactionTemplate transactionTemplate;
 
-    @Transactional
+    public NotaCreditoService(ComprobanteRepository comprobanteRepository,
+                               ProductoRepository productoRepository,
+                               BodegaRepository bodegaRepository,
+                               CatalogoSriService catalogoSriService,
+                               SecuencialService secuencialService,
+                               AccessKeyService accessKeyService,
+                               InventarioService inventarioService,
+                               ComprobanteProcesamientoService comprobanteProcesamientoService,
+                               PlatformTransactionManager transactionManager) {
+        this.comprobanteRepository = comprobanteRepository;
+        this.productoRepository = productoRepository;
+        this.bodegaRepository = bodegaRepository;
+        this.catalogoSriService = catalogoSriService;
+        this.secuencialService = secuencialService;
+        this.accessKeyService = accessKeyService;
+        this.inventarioService = inventarioService;
+        this.comprobanteProcesamientoService = comprobanteProcesamientoService;
+        this.transactionTemplate = new TransactionTemplate(transactionManager);
+    }
+
     public ComprobanteResponse crear(NotaCreditoRequest request) {
+        Long notaCreditoId = transactionTemplate.execute(status -> crearNotaCreditoPendiente(request));
+        comprobanteProcesamientoService.procesar(notaCreditoId);
+        return transactionTemplate.execute(status ->
+                aResponse(comprobanteRepository.findById(notaCreditoId).orElseThrow()));
+    }
+
+    private Long crearNotaCreditoPendiente(NotaCreditoRequest request) {
         Comprobante original = comprobanteRepository.findById(request.comprobanteOriginalId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Comprobante original no encontrado: " + request.comprobanteOriginalId()));
@@ -122,10 +152,7 @@ public class NotaCreditoService {
         notaCredito.setImporteTotal(totalSinImpuestos.add(totalImpuestos));
 
         notaCredito = comprobanteRepository.save(notaCredito);
-        comprobanteProcesamientoService.procesar(notaCredito.getId());
-        notaCredito = comprobanteRepository.findById(notaCredito.getId()).orElseThrow();
-
-        return aResponse(notaCredito);
+        return notaCredito.getId();
     }
 
     private ComprobanteResponse aResponse(Comprobante c) {

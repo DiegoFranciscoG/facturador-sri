@@ -15,6 +15,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.SimpleTransactionStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -38,6 +40,7 @@ class NotaCreditoServiceTest {
     @Mock private AccessKeyService accessKeyService;
     @Mock private InventarioService inventarioService;
     @Mock private ComprobanteProcesamientoService comprobanteProcesamientoService;
+    @Mock private PlatformTransactionManager transactionManager;
 
     private NotaCreditoService service;
 
@@ -47,9 +50,10 @@ class NotaCreditoServiceTest {
 
     @BeforeEach
     void setUp() {
+        lenient().when(transactionManager.getTransaction(any())).thenReturn(new SimpleTransactionStatus());
         service = new NotaCreditoService(comprobanteRepository, productoRepository, bodegaRepository,
                 catalogoSriService, secuencialService, accessKeyService, inventarioService,
-                comprobanteProcesamientoService);
+                comprobanteProcesamientoService, transactionManager);
 
         Emisor emisor = Emisor.builder().ruc("1790012344001").razonSocial("DEMO").direccionMatriz("x").build();
         Establecimiento establecimiento = Establecimiento.builder().id(1L).emisor(emisor).codigo("001").build();

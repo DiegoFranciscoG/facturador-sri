@@ -31,19 +31,16 @@ public class EventoSri {
     @Column(name = "tipo_evento", nullable = false, length = 30)
     private TipoEventoSri tipoEvento;
 
-    @Lob
-    @Column(name = "request_payload")
+    @Column(name = "request_payload", columnDefinition = "TEXT")
     private String requestPayload;
 
-    @Lob
-    @Column(name = "response_payload")
+    @Column(name = "response_payload", columnDefinition = "TEXT")
     private String responsePayload;
 
     @Column(name = "estado_resultante", length = 20)
     private String estadoResultante;
 
-    @Lob
-    @Column(name = "mensaje_error")
+    @Column(name = "mensaje_error", columnDefinition = "TEXT")
     private String mensajeError;
 
     @Column(name = "intento_numero", nullable = false)

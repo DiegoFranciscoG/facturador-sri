@@ -14,6 +14,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.SimpleTransactionStatus;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -38,6 +40,7 @@ class VentaServiceTest {
     @Mock private AccessKeyService accessKeyService;
     @Mock private InventarioService inventarioService;
     @Mock private ComprobanteProcesamientoService comprobanteProcesamientoService;
+    @Mock private PlatformTransactionManager transactionManager;
 
     private VentaService service;
 
@@ -49,12 +52,13 @@ class VentaServiceTest {
 
     @BeforeEach
     void setUp() {
+        lenient().when(transactionManager.getTransaction(any())).thenReturn(new SimpleTransactionStatus());
         service = new VentaService(establecimientoRepository, puntoEmisionRepository, clienteRepository,
                 bodegaRepository, productoRepository, comprobanteRepository, catalogoSriService,
                 secuencialService, accessKeyService, inventarioService,
                 new SriProperties("SIMULADO", "1", "x", "y", null, null, "2.34",
                         new SriProperties.Reintentos(5, 30)),
-                comprobanteProcesamientoService);
+                comprobanteProcesamientoService, transactionManager);
 
         Emisor emisor = Emisor.builder().ruc("1790012344001").razonSocial("DEMO")
                 .direccionMatriz("x").ambiente("1").build();
