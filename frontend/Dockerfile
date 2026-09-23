@@ -9,7 +9,7 @@ ARG API_BASE_URL=http://localhost:8080
 RUN sed -i "s#http://localhost:8080#${API_BASE_URL}#g" src/environments/environment.ts
 RUN npm run build
 
-FROM nginx:1.27-alpine AS runtime
+FROM nginx:1.29-alpine AS runtime
 RUN addgroup -S facturador && adduser -S facturador -G facturador
 COPY --from=build /build/dist/frontend/browser /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
