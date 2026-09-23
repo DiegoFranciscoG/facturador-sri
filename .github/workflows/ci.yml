@@ -55,7 +55,7 @@ jobs:
           done
       - name: Python 3.12
         if: hashFiles('**/requirements*.txt', '**/pyproject.toml') != ''
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.12'
       - name: pip + pytest
