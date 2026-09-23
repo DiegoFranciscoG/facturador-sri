@@ -1,0 +1,11 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPath": "/RecepcionComprobantesOffline"
+  },
+  "response": {
+    "status": 200,
+    "headers": { "Content-Type": "text/xml; charset=UTF-8" },
+    "body": "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\"><soap:Body><RespuestaSolicitud><estado>RECIBIDA</estado></RespuestaSolicitud></soap:Body></soap:Envelope>"
+  }
+}

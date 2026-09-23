@@ -1,0 +1,89 @@
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-xl font-semibold text-slate-800">Clientes</h1>
+  <button
+    (click)="nuevo()"
+    class="rounded-md bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2 transition-colors"
+  >
+    + Nuevo cliente
+  </button>
+</div>
+
+@if (mostrarFormulario()) {
+  <div class="bg-white rounded-lg shadow p-5 mb-6 border border-slate-200">
+    <h2 class="font-medium text-slate-700 mb-4">Nuevo cliente</h2>
+    <form (ngSubmit)="guardar()" class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">Tipo de identificación</label>
+        <select name="tipoIdentificacion" [(ngModel)]="form.tipoIdentificacion" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
+          @for (tipo of tiposIdentificacion; track tipo.codigo) {
+            <option [value]="tipo.codigo">{{ tipo.nombre }}</option>
+          }
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">Identificación</label>
+        <input name="identificacion" required [(ngModel)]="form.identificacion" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" />
+      </div>
+      <div class="col-span-2">
+        <label class="block text-xs font-medium text-slate-600 mb-1">Razón social / Nombres</label>
+        <input name="razonSocial" required [(ngModel)]="form.razonSocial" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" />
+      </div>
+      <div class="col-span-2">
+        <label class="block text-xs font-medium text-slate-600 mb-1">Dirección</label>
+        <input name="direccion" [(ngModel)]="form.direccion" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" />
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">Email</label>
+        <input name="email" type="email" [(ngModel)]="form.email" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" />
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">Teléfono</label>
+        <input name="telefono" [(ngModel)]="form.telefono" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" />
+      </div>
+
+      @if (error()) {
+        <p class="col-span-2 text-sm text-red-600">{{ error() }}</p>
+      }
+
+      <div class="col-span-2 flex gap-2 justify-end">
+        <button type="button" (click)="mostrarFormulario.set(false)" class="px-4 py-2 text-sm rounded-md border border-slate-300">
+          Cancelar
+        </button>
+        <button type="submit" [disabled]="guardando()" class="px-4 py-2 text-sm rounded-md bg-brand-600 hover:bg-brand-700 text-white disabled:opacity-50">
+          Guardar
+        </button>
+      </div>
+    </form>
+  </div>
+}
+
+<div class="bg-white rounded-lg shadow border border-slate-200 overflow-hidden">
+  <table class="w-full text-sm">
+    <thead class="bg-slate-50 text-slate-600 text-left">
+      <tr>
+        <th class="px-4 py-3">Identificación</th>
+        <th class="px-4 py-3">Razón social</th>
+        <th class="px-4 py-3">Email</th>
+        <th class="px-4 py-3">Teléfono</th>
+        <th class="px-4 py-3"></th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-slate-100">
+      @for (cliente of clientes(); track cliente.id) {
+        <tr>
+          <td class="px-4 py-3">{{ cliente.identificacion }}</td>
+          <td class="px-4 py-3">{{ cliente.razonSocial }}</td>
+          <td class="px-4 py-3">{{ cliente.email }}</td>
+          <td class="px-4 py-3">{{ cliente.telefono }}</td>
+          <td class="px-4 py-3 text-right">
+            <button (click)="eliminar(cliente)" class="text-red-600 hover:underline text-xs">Eliminar</button>
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="5" class="px-4 py-6 text-center text-slate-400">No hay clientes registrados todavía.</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

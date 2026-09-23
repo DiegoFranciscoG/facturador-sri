@@ -1,0 +1,36 @@
+<div class="min-h-screen flex bg-slate-50">
+  <aside class="w-64 bg-brand-800 text-white flex flex-col">
+    <div class="px-5 py-5 border-b border-brand-700">
+      <p class="font-semibold text-lg">Facturador SRI</p>
+      <p class="text-xs text-brand-200">
+        {{ authService.usuario()?.username }} · {{ authService.usuario()?.rol }}
+      </p>
+    </div>
+    <nav class="flex-1 px-3 py-4 space-y-1 text-sm">
+      <a routerLink="/pos" routerLinkActive="bg-brand-600" class="block rounded-md px-3 py-2 hover:bg-brand-700 transition-colors">
+        Punto de venta
+      </a>
+      <a routerLink="/comprobantes" routerLinkActive="bg-brand-600" class="block rounded-md px-3 py-2 hover:bg-brand-700 transition-colors">
+        Comprobantes
+      </a>
+      <a routerLink="/productos" routerLinkActive="bg-brand-600" class="block rounded-md px-3 py-2 hover:bg-brand-700 transition-colors">
+        Productos
+      </a>
+      <a routerLink="/clientes" routerLinkActive="bg-brand-600" class="block rounded-md px-3 py-2 hover:bg-brand-700 transition-colors">
+        Clientes
+      </a>
+    </nav>
+    <div class="px-3 py-4 border-t border-brand-700">
+      <button
+        (click)="cerrarSesion()"
+        class="w-full text-left rounded-md px-3 py-2 text-sm hover:bg-brand-700 transition-colors"
+      >
+        Cerrar sesión
+      </button>
+    </div>
+  </aside>
+
+  <main class="flex-1 p-6 overflow-y-auto">
+    <router-outlet />
+  </main>
+</div>

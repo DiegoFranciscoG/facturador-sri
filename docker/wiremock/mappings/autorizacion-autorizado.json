@@ -1,0 +1,12 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPath": "/AutorizacionComprobantesOffline"
+  },
+  "response": {
+    "status": 200,
+    "headers": { "Content-Type": "text/xml; charset=UTF-8" },
+    "body": "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\"><soap:Body><RespuestaAutorizacionComprobante><autorizaciones><autorizacion><estado>AUTORIZADO</estado><numeroAutorizacion>{{xPath request.body '//*[local-name()=\"claveAccesoComprobante\"]/text()'}}</numeroAutorizacion><fechaAutorizacion>{{now format='yyyy-MM-dd'T'HH:mm:ssXXX'}}</fechaAutorizacion><comprobante>&lt;factura/&gt;</comprobante></autorizacion></autorizaciones></RespuestaAutorizacionComprobante></soap:Body></soap:Envelope>",
+    "transformers": ["response-template"]
+  }
+}

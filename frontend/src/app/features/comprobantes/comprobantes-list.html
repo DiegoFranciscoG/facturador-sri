@@ -1,0 +1,51 @@
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-xl font-semibold text-slate-800">Comprobantes</h1>
+  <select
+    class="rounded-md border border-slate-300 px-3 py-2 text-sm"
+    (change)="cambiarFiltro($any($event.target).value)"
+  >
+    <option value="">Todos los estados</option>
+    @for (estado of estados; track estado) {
+      <option [value]="estado">{{ estado }}</option>
+    }
+  </select>
+</div>
+
+<div class="bg-white rounded-lg shadow border border-slate-200 overflow-hidden">
+  <table class="w-full text-sm">
+    <thead class="bg-slate-50 text-slate-600 text-left">
+      <tr>
+        <th class="px-4 py-3">Secuencial</th>
+        <th class="px-4 py-3">Cliente</th>
+        <th class="px-4 py-3">Fecha</th>
+        <th class="px-4 py-3">Total</th>
+        <th class="px-4 py-3">Estado</th>
+        <th class="px-4 py-3"></th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-slate-100">
+      @for (comprobante of comprobantes(); track comprobante.id) {
+        <tr>
+          <td class="px-4 py-3 font-mono">{{ comprobante.secuencial }}</td>
+          <td class="px-4 py-3">{{ comprobante.clienteRazonSocial }}</td>
+          <td class="px-4 py-3">{{ comprobante.fechaEmision }}</td>
+          <td class="px-4 py-3">{{ comprobante.importeTotal | number: '1.2-2' }}</td>
+          <td class="px-4 py-3">
+            <span class="estado-badge" [class]="'estado-' + comprobante.estado.toLowerCase()">
+              {{ comprobante.estado }}
+            </span>
+          </td>
+          <td class="px-4 py-3 text-right">
+            <a [routerLink]="['/comprobantes', comprobante.id]" class="text-brand-600 hover:underline text-xs">
+              Ver detalle
+            </a>
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="6" class="px-4 py-6 text-center text-slate-400">No hay comprobantes todavía.</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

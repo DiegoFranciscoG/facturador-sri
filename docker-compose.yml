@@ -1,0 +1,63 @@
+services:
+  postgres:
+    image: postgres:16.4-alpine
+    environment:
+      POSTGRES_DB: facturador
+      POSTGRES_USER: ${DB_USER:-facturador}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Define DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - facturador-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-facturador} -d facturador"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  sri-simulado:
+    image: wiremock/wiremock:3.9.2-alpine
+    ports:
+      - "8089:8080"
+    volumes:
+      - ./docker/wiremock/mappings:/home/wiremock/mappings:ro
+    command: ["--global-response-templating"]
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      sri-simulado:
+        condition: service_started
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      DB_URL: jdbc:postgresql://postgres:5432/facturador
+      DB_USER: ${DB_USER:-facturador}
+      DB_PASSWORD: ${DB_PASSWORD:?Define DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:?Define JWT_SECRET}
+      JWT_EXPIRATION_MINUTES: ${JWT_EXPIRATION_MINUTES:-30}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:4200}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:?Define ADMIN_USERNAME}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Define ADMIN_PASSWORD}
+      SRI_MODO: ${SRI_MODO:-SIMULADO}
+      SRI_RECEPCION_URL: http://sri-simulado:8080/RecepcionComprobantesOffline
+      SRI_AUTORIZACION_URL: http://sri-simulado:8080/AutorizacionComprobantesOffline
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        API_BASE_URL: ${API_BASE_URL:-http://localhost:8080}
+    depends_on:
+      - backend
+    ports:
+      - "4200:80"
+
+volumes:
+  facturador-db-data:

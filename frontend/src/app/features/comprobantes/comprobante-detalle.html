@@ -1,0 +1,89 @@
+<a routerLink="/comprobantes" class="text-sm text-brand-600 hover:underline">&larr; Volver a comprobantes</a>
+
+@if (comprobante(); as c) {
+  <div class="bg-white rounded-lg shadow border border-slate-200 p-6 mt-4">
+    <div class="flex items-start justify-between mb-4">
+      <div>
+        <h1 class="text-xl font-semibold text-slate-800">Comprobante {{ c.secuencial }}</h1>
+        <p class="text-sm text-slate-500">{{ c.clienteRazonSocial }} · {{ c.fechaEmision }}</p>
+      </div>
+      <span class="estado-badge text-sm" [class]="'estado-' + c.estado.toLowerCase()">{{ c.estado }}</span>
+    </div>
+
+    <p class="text-sm text-slate-600 mb-1">
+      Clave de acceso: <span class="font-mono">{{ c.claveAcceso }}</span>
+    </p>
+    @if (c.numeroAutorizacion) {
+      <p class="text-sm text-slate-600 mb-4">
+        Autorizado el {{ c.fechaAutorizacion }} · No. {{ c.numeroAutorizacion }}
+      </p>
+    }
+
+    <div class="grid grid-cols-3 gap-4 text-sm mb-6 border-t border-slate-100 pt-4">
+      <div><p class="text-slate-500">Subtotal</p><p class="font-medium">{{ c.totalSinImpuestos | number: '1.2-2' }}</p></div>
+      <div><p class="text-slate-500">Descuento</p><p class="font-medium">{{ c.totalDescuento | number: '1.2-2' }}</p></div>
+      <div><p class="text-slate-500">Total</p><p class="font-medium">{{ c.importeTotal | number: '1.2-2' }}</p></div>
+    </div>
+
+    <div class="flex gap-2">
+      @if (c.estado === 'AUTORIZADO') {
+        <button (click)="descargarRide()" class="px-4 py-2 text-sm rounded-md bg-brand-600 hover:bg-brand-700 text-white">
+          Descargar RIDE
+        </button>
+      }
+      <button (click)="descargarXml()" class="px-4 py-2 text-sm rounded-md border border-slate-300">
+        Descargar XML
+      </button>
+      @if (c.estado === 'AUTORIZADO' && c.tipoComprobante === '01') {
+        <button (click)="mostrarFormularioNc.set(!mostrarFormularioNc())" class="px-4 py-2 text-sm rounded-md border border-slate-300">
+          Emitir nota de crédito
+        </button>
+      }
+    </div>
+
+    @if (mostrarFormularioNc()) {
+      <div class="mt-6 border-t border-slate-100 pt-4">
+        <h2 class="font-medium text-slate-700 mb-3">Nueva nota de crédito</h2>
+        <div class="grid grid-cols-2 gap-4 mb-3">
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">Producto a acreditar</label>
+            <select [(ngModel)]="ncProductoId" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
+              <option [ngValue]="undefined">Seleccione...</option>
+              @for (producto of productos(); track producto.id) {
+                <option [ngValue]="producto.id">{{ producto.descripcion }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">Cantidad</label>
+            <input type="number" min="1" [(ngModel)]="ncCantidad" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">Bodega de devolución</label>
+            <select [(ngModel)]="ncBodegaId" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
+              @for (bodega of bodegas(); track bodega.id) {
+                <option [ngValue]="bodega.id">{{ bodega.nombre }}</option>
+              }
+            </select>
+          </div>
+          <div class="col-span-2">
+            <label class="block text-xs font-medium text-slate-600 mb-1">Motivo</label>
+            <input [(ngModel)]="ncMotivo" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" />
+          </div>
+        </div>
+        @if (errorNc()) {
+          <p class="text-sm text-red-600 mb-2">{{ errorNc() }}</p>
+        }
+        <button
+          (click)="crearNotaCredito()"
+          [disabled]="guardandoNc()"
+          class="px-4 py-2 text-sm rounded-md bg-accent-600 hover:bg-accent-500 text-white disabled:opacity-50"
+        >
+          {{ guardandoNc() ? 'Emitiendo...' : 'Emitir nota de crédito' }}
+        </button>
+      </div>
+    }
+  </div>
+} @else {
+  <p class="text-slate-400 mt-6">Cargando...</p>
+}
