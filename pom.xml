@@ -24,6 +24,7 @@
 		<openpdf.version>3.0.5</openpdf.version>
 		<springdoc.version>3.1.1</springdoc.version>
 		<wiremock.version>3.10.0</wiremock.version>
+		<bouncycastle.version>1.85</bouncycastle.version>
 	</properties>
 
 	<dependencies>
@@ -101,6 +102,14 @@
 			<groupId>com.github.librepdf</groupId>
 			<artifactId>openpdf</artifactId>
 			<version>${openpdf.version}</version>
+		</dependency>
+
+		<!-- Certificado autofirmado en tiempo de ejecucion para el modo SIMULADO
+		     (nunca se versiona; solo sirve para firmar contra el SOAP simulado) -->
+		<dependency>
+			<groupId>org.bouncycastle</groupId>
+			<artifactId>bcpkix-jdk18on</artifactId>
+			<version>${bouncycastle.version}</version>
 		</dependency>
 
 		<!-- OpenAPI / Swagger UI -->
