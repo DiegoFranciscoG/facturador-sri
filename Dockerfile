@@ -11,7 +11,7 @@ COPY src src
 RUN mvn -B -ntp -DskipTests package
 
 # ---- Etapa de ejecucion ----
-FROM eclipse-temurin:17.0.13_11-jre-alpine AS runtime
+FROM eclipse-temurin:24.0.2_12-jre-alpine AS runtime
 
 RUN addgroup -S facturador && adduser -S facturador -G facturador
 WORKDIR /app
